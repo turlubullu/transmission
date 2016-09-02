@@ -68,17 +68,6 @@ shift $(( OPTIND - 1 ))
 [[ "${TZ:-""}" ]] && timezone "$TZ"
 [[ "${USERID:-""}" =~ ^[0-9]+$ ]] && usermod -u $USERID -o debian-transmission
 [[ "${GROUPID:-""}" =~ ^[0-9]+$ ]]&& groupmod -g $GROUPID -o debian-transmission
-for env in $(printenv | grep '^TR_'); do
-    name=$(cut -c4- <<< ${env%%=*} | tr '_A-Z' '-a-z')
-    val="\"${env##*=}\""
-    [[ "$val" =~ ^\"([0-9]+|false|true)\"$ ]] && val=$(sed 's|"||g' <<<$val)
-    if grep -q "\"$name\"" $dir/info/settings.json; then
-        sed -i "/\"$name\"/s|:.*|: $val,|" $dir/info/settings.json
-    else
-        sed -i 's|\([0-9"]\)$|\1,|' $dir/info/settings.json
-        sed -i "/^}/i\    \"$name\": $val" $dir/info/settings.json
-    fi
-done
 
 watchdir=$(awk -F'=' '/"watch-dir"/ {print $2}' $dir/info/settings.json |
             sed 's/[,"]//g')
@@ -107,7 +96,5 @@ else
     fi
     exec su -l debian-transmission -s /bin/bash -c "exec transmission-daemon \
                 --config-dir $dir/info --blocklist --encryption-preferred \
-                --dht --allowed \\* --foreground --log-info --no-portmap \
-                $([[ ${NOAUTH:-""} ]] && echo '--no-auth' || echo "--auth \
-                --username ${TRUSER:-admin} --password ${TRPASSWD:-admin}")"
+                --dht --allowed \\* --foreground --log-info --no-portmap"
 fi
